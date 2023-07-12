@@ -1,22 +1,40 @@
-import logo from './logo.svg';
+import { useState, useEffect } from 'react';
 import './App.css';
 
+import vocabulary from './sonavara';
+
+// mutable
+function getItem(vocabulary) {
+  const index = Math.floor(Math.random() * vocabulary.length);
+  return vocabulary.splice(index, 1)[0];
+}
+
+const firstItem = getItem(vocabulary);
+
 function App() {
+  const [ wordDefinition, setWordDefinition ] = useState(firstItem);
+  const [ extraDefinition, setExtraDefinition ] = useState(null);
+
+  useEffect(() => {
+    let ignore = false;
+
+    fetch(`https://api.sonapi.ee/v1/${wordDefinition.word}`)
+    .then(result => result.json())
+    .then(result => {
+      if (!ignore) {
+        setExtraDefinition(result.wordForms);
+      }
+    });
+    return () => {
+      ignore = true;
+    };
+  }, [wordDefinition]);
+
   return (
-    <div className="App">
+    <div className="App" onClick={() => setWordDefinition(getItem(vocabulary))}>
       <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
+        <h1>{wordDefinition.word}</h1>
+        <pre style={{textAlign: 'left'}}>{JSON.stringify(extraDefinition, null, 2)}</pre>
       </header>
     </div>
   );
